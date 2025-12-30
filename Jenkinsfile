@@ -17,14 +17,20 @@ pipeline {
             steps {
                 withKubeConfig([credentialsId: "${KUBECONFIG_ID}"]) {
                     script {
-                        // helm 대신 /var/jenkins_home/helm 이라고 정확한 주소를 적어줍니다.
-                        sh '/var/jenkins_home/helm repo add metallb https://metallb.github.io/metallb'
-                        sh '/var/jenkins_home/helm repo update'
+                        // 1. Helm이 없으면 현재 작업 폴더에 다운로드 (가장 확실한 방법!)
+                        sh 'curl -LO https://get.helm.sh/helm-v3.13.2-linux-amd64.tar.gz'
+                        sh 'tar -zxvf helm-v3.13.2-linux-amd64.tar.gz'
                         
+                        // 2. 압축 푼 폴더(linux-amd64) 안에 있는 helm 실행파일 사용
+                        // (점 slash ./ 를 사용하여 현재 위치의 파일을 실행)
+                        sh './linux-amd64/helm repo add metallb https://metallb.github.io/metallb'
+                        sh './linux-amd64/helm repo update'
+                        
+                        // 3. 네임스페이스 생성
                         sh "kubectl create namespace ${NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -"
                         
-                        // 여기도 주소 변경
-                        sh "/var/jenkins_home/helm upgrade --install metallb metallb/metallb --namespace ${NAMESPACE} --wait"
+                        // 4. MetalLB 설치 (경로 주의: ./linux-amd64/helm)
+                        sh "./linux-amd64/helm upgrade --install metallb metallb/metallb --namespace ${NAMESPACE} --wait"
                     }
                 }
             }
