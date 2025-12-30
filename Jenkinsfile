@@ -55,7 +55,7 @@ metadata:
   namespace: ${NAMESPACE}
 spec:
   addresses:
-  - 192.168.1.240-192.168.1.250
+  - 192.168.56.240-192.168.56.250
 ---
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
