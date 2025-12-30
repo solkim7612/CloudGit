@@ -17,13 +17,14 @@ pipeline {
             steps {
                 withKubeConfig([credentialsId: "${KUBECONFIG_ID}"]) {
                     script {
-                        // 1. MetalLB 저장소 추가
-                        sh 'helm repo add metallb https://metallb.github.io/metallb'
-                        sh 'helm repo update'
+                        // helm 대신 /var/jenkins_home/helm 이라고 정확한 주소를 적어줍니다.
+                        sh '/var/jenkins_home/helm repo add metallb https://metallb.github.io/metallb'
+                        sh '/var/jenkins_home/helm repo update'
                         
-                        // 2. 네임스페이스 생성 및 설치
                         sh "kubectl create namespace ${NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -"
-                        sh "helm upgrade --install metallb metallb/metallb --namespace ${NAMESPACE} --wait"
+                        
+                        // 여기도 주소 변경
+                        sh "/var/jenkins_home/helm upgrade --install metallb metallb/metallb --namespace ${NAMESPACE} --wait"
                     }
                 }
             }
