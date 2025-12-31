@@ -53,17 +53,25 @@ pipeline {
             steps {
                 withKubeConfig([credentialsId: "${KUBECONFIG_ID}"]) {
                     script {
-                        echo "Canary 배포 시작: 기존(Blue) 4개 / 신규(Green) 1개로 트래픽 분산"
-                        sh "./kubectl scale deployment my-calc-blue --replicas=4 -n metallb-system"
+                        echo "🚀 카나리 배포 시작!"
+                        
+                        // 1. Blue는 건드리지 않음 (이미 구버전 4개가 떠 있다고 가정)
+                        // 만약 Blue가 0개라면 여기서 scale up을 하면 안됨 (최신 이미지를 받아버리므로)
+                        
+                        // 2. Green(신버전) 초기화 및 이미지 업데이트
                         sh "./kubectl scale deployment my-calc-green --replicas=0 -n metallb-system"
-                        sleep 5
-
+                        // Green이 최신 이미지를 가져오도록 강제 재시작
+                        sh "./kubectl rollout restart deployment/my-calc-green -n metallb-system"
+                        
+                        // 3. 카나리 투입 (Green 1개 = 약 20% 트래픽)
+                        echo "--> Green(Canary) 1개를 투입합니다..."
                         sh "./kubectl scale deployment my-calc-green --replicas=1 -n metallb-system"
-                        echo "카나리 버전(Green)이 투입되었습니다. 접속 테스트를 진행하세요!"
                         
-                        sleep 15
+                        // 4. 관찰 시간 (20초 동안 섞이는지 확인하세요!)
+                        sleep 20
                         
-                        echo "테스트 통과! Green으로 전면 교체합니다."
+                        // 5. 배포 확정 (Green을 메인으로)
+                        echo "--> 테스트 통과! Green으로 전면 교체합니다."
                         sh "./kubectl scale deployment my-calc-green --replicas=4 -n metallb-system"
                         sh "./kubectl scale deployment my-calc-blue --replicas=0 -n metallb-system"
                     }
