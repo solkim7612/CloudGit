@@ -13,7 +13,7 @@ dependencies {
 
 jib {
     from {
-        image = 'eclipse-temurin:11-jre'
+        image = 'eclipse-temurin:21-jre'
     }
     to {
         image = 'kssol626/my-calc-app' 
