@@ -27,7 +27,7 @@ public class Calculator {
     static class MyHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange t) throws IOException {
-	    String response = "<h1 style='color:red'>CANARY Version (Red)</h1><p>Testing...</p>";
+	    String response = "<h1 style='color:purple'>Version 3.0 (Purple)</h1><p>Slow Canary Rollout...</p>";
 
             t.sendResponseHeaders(200, response.length());
             OutputStream os = t.getResponseBody();
