@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:  
+  name: my-calc-app        
+  namespace: metallb-system        
+spec:          
+  replicas: 2                
+  selector:                  
+    matchLabels:                        
+      app: my-calc-app                                  
+  template:                                    
+    metadata:                                          
+      labels:                                                  
+        app: my-calc-app                                                                
+    spec:                                                                  
+      containers:                                                                        
+      - name: my-calc-app      
+        image: kssol626/my-calc-app:latest                      
+        imagePullPolicy: Always        
+        ports:        
+        - containerPort: 8080        
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-calc-service  
+  namespace: metallb-system                       
+spec:
+  type: LoadBalancer     
+  selector:                    
+    app: my-calc-app           
+  ports:  
+    - protocol: TCP    
+      port: 80                   
+      targetPort: 8080
