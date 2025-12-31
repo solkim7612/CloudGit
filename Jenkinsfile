@@ -49,31 +49,23 @@ pipeline {
             }
         }
 
-        stage('Blue/Green Deploy') {
+        stage('Canary Deploy') {
             steps {
                 withKubeConfig([credentialsId: "${KUBECONFIG_ID}"]) {
                     script {
-                        // 1. 현재 서비스가 바라보는 색깔 확인 (앞에 ./ 추가!)
-                        def current_color = sh(script: "./kubectl get svc my-calc-service -n metallb-system -o jsonpath='{.spec.selector.color}'", returnStdout: true).trim()
+                        echo "Canary 배포 시작: 기존(Blue) 4개 / 신규(Green) 1개로 트래픽 분산"
+                        sh "./kubectl scale deployment my-calc-blue --replicas=4 -n metallb-system"
+                        sh "./kubectl scale deployment my-calc-green --replicas=0 -n metallb-system"
+                        sleep 5
+
+                        sh "./kubectl scale deployment my-calc-green --replicas=1 -n metallb-system"
+                        echo "카나리 버전(Green)이 투입되었습니다. 접속 테스트를 진행하세요!"
                         
-                        echo "현재 활성화된 색상: ${current_color}"
+                        sleep 15
                         
-                        // 2. 배포할 목표 색깔 결정
-                        def target_color = (current_color == 'blue') ? 'green' : 'blue'
-                        echo "배포할 목표 색상: ${target_color}"
-                        
-                        // 3. 목표 색상의 Deployment 재시작 (앞에 ./ 추가!)
-                        sh "./kubectl rollout restart deployment/my-calc-${target_color} -n metallb-system"
-                        
-                        // 4. 배포가 완료될 때까지 대기 (앞에 ./ 추가!)
-                        sh "./kubectl rollout status deployment/my-calc-${target_color} -n metallb-system"
-                        
-                        sleep 5 
-                        
-                        // 5. 서비스 스위칭 (앞에 ./ 추가!)
-                        sh "./kubectl patch service my-calc-service -n metallb-system -p '{\"spec\":{\"selector\":{\"color\":\"${target_color}\"}}}'"
-                        
-                        echo "배포 완료! 서비스가 [${current_color}] -> [${target_color}] 로 전환되었습니다."
+                        echo "테스트 통과! Green으로 전면 교체합니다."
+                        sh "./kubectl scale deployment my-calc-green --replicas=4 -n metallb-system"
+                        sh "./kubectl scale deployment my-calc-blue --replicas=0 -n metallb-system"
                     }
                 }
             }
