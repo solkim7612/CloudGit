@@ -49,15 +49,30 @@ pipeline {
             }
         }
 
-        stage('Deploy to K8s') {
+        stage('Blue/Green Deploy') {
             steps {
                 withKubeConfig([credentialsId: "${KUBECONFIG_ID}"]) {
                     script {
-                        sh "./kubectl apply -f deploy.yaml"
-                        sh "./kubectl rollout restart deployment/my-calc-app -n metallb-system"
+                        def current_color = sh(script: "kubectl get svc my-calc-service -n metallb-system -o jsonpath='{.spec.selector.color}'", returnStdout: true).trim()
+                        
+                        echo "현재 활성화된 색상: ${current_color}"
+                        
+                        def target_color = (current_color == 'blue') ? 'green' : 'blue'
+                        echo "배포할 목표 색상: ${target_color}"
+                        
+                        sh "./kubectl rollout restart deployment/my-calc-${target_color} -n metallb-system"
+                        
+                        sh "./kubectl rollout status deployment/my-calc-${target_color} -n metallb-system"
+                        
+                        sleep 5 
+                        
+                        sh "./kubectl patch service my-calc-service -n metallb-system -p '{\"spec\":{\"selector\":{\"color\":\"${target_color}\"}}}'"
+                        
+                        echo "배포 완료! 서비스가 [${current_color}] -> [${target_color}] 로 전환되었습니다."
                     }
                 }
             }
-        }
+        }      
+
     }
 }
