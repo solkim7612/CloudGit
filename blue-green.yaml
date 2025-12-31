@@ -1,0 +1,65 @@
+# 1. 블루(Blue) 배포판 - 현재 버전이라고 가정
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-calc-blue
+  namespace: metallb-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-calc
+      color: blue
+  template:
+    metadata:
+      labels:
+        app: my-calc
+        color: blue
+    spec:
+      containers:
+      - name: my-calc
+        image: kssol626/my-calc-app:latest  # <--- 본인 아이디 입력
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+---
+# 2. 그린(Green) 배포판 - 다음 버전 대기조
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-calc-green
+  namespace: metallb-system
+spec:
+  replicas: 1   # 평소에는 0으로 꺼둘 수도 있지만, 실습을 위해 1로 둡니다.
+  selector:
+    matchLabels:
+      app: my-calc
+      color: green
+  template:
+    metadata:
+      labels:
+        app: my-calc
+        color: green
+    spec:
+      containers:
+      - name: my-calc
+        image: kssol626/my-calc-app:latest  # <--- 본인 아이디 입력
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+---
+# 3. 서비스 (스위치 역할)
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-calc-service
+  namespace: metallb-system
+spec:
+  type: LoadBalancer
+  selector:
+    app: my-calc
+    color: blue  # <--- 처음에는 'blue'를 바라보게 설정
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080

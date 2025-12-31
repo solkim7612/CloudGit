@@ -72,7 +72,7 @@ pipeline {
                         
                         // 5. 배포 확정 (Green을 메인으로)
                         echo "--> 테스트 통과! Green으로 전면 교체합니다."
-                        sh "./kubectl scale deployment my-calc-green --replicas=4 -n metallb-system"
+                        sh "./kubectl scale deployment my-calc-green --replicas=1 -n metallb-system"
                         sh "./kubectl scale deployment my-calc-blue --replicas=0 -n metallb-system"
                     }
                 }
