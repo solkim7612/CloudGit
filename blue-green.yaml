@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: my-calc
-        image: kssol626/my-calc-app:latest  # <--- 본인 아이디 입력
+        image: kssol626/my-calc-app:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -30,7 +30,7 @@ metadata:
   name: my-calc-green
   namespace: metallb-system
 spec:
-  replicas: 1   # 평소에는 0으로 꺼둘 수도 있지만, 실습을 위해 1로 둡니다.
+  replicas: 1 
   selector:
     matchLabels:
       app: my-calc
@@ -43,7 +43,7 @@ spec:
     spec:
       containers:
       - name: my-calc
-        image: kssol626/my-calc-app:latest  # <--- 본인 아이디 입력
+        image: kssol626/my-calc-app:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -58,7 +58,7 @@ spec:
   type: LoadBalancer
   selector:
     app: my-calc
-    color: blue  # <--- 처음에는 'blue'를 바라보게 설정
+    color: blue 
   ports:
     - protocol: TCP
       port: 80

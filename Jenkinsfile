@@ -53,21 +53,17 @@ pipeline {
             steps {
                 withKubeConfig([credentialsId: "${KUBECONFIG_ID}"]) {
                     script {
-                        echo "🚀 카나리 배포 시작 (Blue는 유지, Green 투입)"
+                        echo "카나리 배포 시작 (Blue는 유지, Green 투입)"
                         
-                        // 1. Green 초기화 및 이미지 업데이트
                         sh "./kubectl scale deployment my-calc-green --replicas=0 -n metallb-system"
                         sh "./kubectl rollout restart deployment/my-calc-green -n metallb-system"
                         
-                        // 2. 카나리 투입 (Green 1개)
                         echo "--> Green(Purple) 1개를 투입합니다. (Blue 1개 vs Green 1개)"
                         sh "./kubectl scale deployment my-calc-green --replicas=1 -n metallb-system"
                         
-                        // [수정] 대기 시간을 60초로 늘림! (충분히 관찰하세요)
                         echo "--> 60초 동안 트래픽이 섞입니다. 터미널을 확인하세요!"
                         sleep 60
                         
-                        // 3. 배포 확정
                         echo "--> Green으로 전면 교체합니다."
                         sh "./kubectl scale deployment my-calc-green --replicas=1 -n metallb-system"
                         sh "./kubectl scale deployment my-calc-blue --replicas=0 -n metallb-system"
@@ -77,4 +73,22 @@ pipeline {
         }
 
     }
+    
+    post {
+        success {
+            script {
+                echo "[SUCCESS] 배포가 성공적으로 완료되었습니다!"
+                echo "빌드 번호: ${env.BUILD_NUMBER}"
+                echo "결과 확인: ${env.BUILD_URL}"
+            }
+        }
+        failure {
+            script {
+                echo "[FAILURE] 배포 실패! 긴급 점검이 필요합니다."
+                echo "빌드 번호: ${env.BUILD_NUMBER}"
+                echo "로그 확인: ${env.BUILD_URL}console"
+            }
+        }
+    }
+
 }
