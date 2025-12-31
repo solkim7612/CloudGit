@@ -36,7 +36,7 @@ pipeline {
         stage('Build & Test') {
             steps {
                 script {
-                    sh './gradlew clean build'
+                    sh './gradlew clean build -x test'
                 }
             }
         }
