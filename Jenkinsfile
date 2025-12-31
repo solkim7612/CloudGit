@@ -36,7 +36,7 @@ pipeline {
         stage('Build & Test') {
             steps {
                 script {
-                    sh './gradlew clean build -x test'
+                    sh './gradlew clean build -x test --no-daemon -Dorg.gradle.jvmargs="-Xmx512m"'
                 }
             }
         }
